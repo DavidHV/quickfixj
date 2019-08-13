@@ -147,11 +147,9 @@ public class IoSessionInitiator {
         private void setupIoConnector() throws ConfigError, GeneralSecurityException {
             final CompositeIoFilterChainBuilder ioFilterChainBuilder = new CompositeIoFilterChainBuilder(userIoFilterChainBuilder);
 
-            boolean hasProxy = proxyType != null && proxyPort > 0 && socketAddresses[nextSocketAddressIndex] instanceof InetSocketAddress;
-
             SSLFilter sslFilter = null;
             if (sslEnabled) {
-                sslFilter = installSslFilter(ioFilterChainBuilder, !hasProxy);
+                sslFilter = installSslFilter(ioFilterChainBuilder, !hasProxy());
             }
 
             ioFilterChainBuilder.addLast(FIXProtocolCodecFactory.FILTER_NAME, new ProtocolCodecFilter(new FIXProtocolCodecFactory()));
@@ -161,7 +159,7 @@ public class IoSessionInitiator {
             newConnector.setHandler(new InitiatorIoHandler(fixSession, networkingOptions, eventHandlingStrategy));
             newConnector.setFilterChainBuilder(ioFilterChainBuilder);
 
-            if (hasProxy) {
+            if (hasProxy()) {
                 ProxyConnector proxyConnector = ProtocolFactory.createIoProxyConnector(
                         (SocketConnector) newConnector,
                         (InetSocketAddress) socketAddresses[nextSocketAddressIndex],
@@ -233,7 +231,9 @@ public class IoSessionInitiator {
                 if (connectFuture.getSession() != null) {
                     ioSession = connectFuture.getSession();
                     connectionFailureCount = 0;
-                    nextSocketAddressIndex = 0;
+                    if (!hasProxy()) {
+                        nextSocketAddressIndex = 0;
+                    }
                     lastConnectTime = System.currentTimeMillis();
                     connectFuture = null;
                 } else {
@@ -351,6 +351,10 @@ public class IoSessionInitiator {
                     LogUtil.logThrowable(fixSession.getLog(), "Exception during resetIoConnector call", e);
                 }
             }
+        }
+
+        private boolean hasProxy() {
+            return proxyType != null && proxyPort > 0 && socketAddresses[nextSocketAddressIndex] instanceof InetSocketAddress;
         }
     }
 

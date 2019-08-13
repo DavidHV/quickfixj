@@ -530,8 +530,10 @@
       <ul>
         <li>Connections are tried one after another until one is successful: SocketConnectHost:SocketConnectPort,
           SocketConnectHost1:SocketConnectPort1, etc.</li>
-        <li>Next connection attempt after a successful connection will start at first defined connection again:
-          SocketConnectHost:SocketConnectPort.</li>
+        <li>Next connection attempt after a successful connection will start at first defined connection again
+            except when connecting through a proxy: SocketConnectHost:SocketConnectPort</li>
+        <li>If connecting through a proxy, next connection attempt after a successful connection will keep on cycling:
+            SocketConnectHost&lt;n+1&gt;:SocketConnectPort&lt;n+1&gt;</li>
       </ul>
     </TD>
     <TD> valid IP address in the format of x.x.x.x or a domain name </TD>
